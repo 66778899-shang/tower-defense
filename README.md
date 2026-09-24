@@ -1,9 +1,11 @@
 # 塔防指挥官 · Tower Defense Commander
 
+> 仓库地址：https://github.com/66778899-shang/tower-defense · 许可证：MIT
+
 一个**零依赖的单文件 HTML5 塔防游戏**：一个 `index.html`（约 100KB，内联全部 CSS/JS + Canvas 渲染），双击即可运行，不需要构建、不需要 npm install、不需要联网。
 
 ```
-git clone <你的仓库地址>
+git clone https://github.com/66778899-shang/tower-defense.git
 cd tower-defense
 # 直接双击 index.html，或者：
 python -m http.server 8000     # 然后打开 http://127.0.0.1:8000

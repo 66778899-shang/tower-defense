@@ -6,10 +6,13 @@
 #   ./publish.sh ghp_xxxxxxxxxxxx [仓库名]
 #
 # Token 在 https://github.com/settings/tokens 生成：
-#   classic token，勾选 repo（以及可选 workflow）；fine-grained 需要有 "Administration: read/write"
-#   与 "Contents: read/write" 权限。
+#   必须是 **classic token 且勾选 repo**。
+#   fine-grained token 实测无法创建仓库（POST /user/repos 返回 403），别在这上面浪费时间。
+#   如果 token 一个 scope 都没勾，建仓会返回误导性的 404 Not Found（不是 401/403），
+#   脚本开头的权限预检会先看 X-OAuth-Scopes 响应头把它拦下来。
 #
-# 安全说明：token 只用于本次 push 的 URL，不会写进 .git/config。
+# 安全说明：token 只临时挂在 pushurl 上，push 完立刻恢复，不会留在 .git/config 里。
+# 建议推送完成后去 https://github.com/settings/tokens 把这个 token 删掉。
 
 set -euo pipefail
 
@@ -63,7 +66,16 @@ fi
 git branch -M main
 git remote remove origin 2>/dev/null || true
 git remote add origin "https://github.com/$USER/$NAME.git"
-git push -u "https://$USER:$TOKEN@github.com/$USER/$NAME.git" main
+
+# token 只临时挂在 pushurl 上：
+# 不能写成 `git push -u https://user:TOKEN@... main` —— 那样 git 会把整条带 token 的 URL
+# 写进 [branch "main"] 的 remote 字段，等于把 token 明文留在 .git/config 里。
+# 用完立刻恢复成干净的 URL。
+git remote set-url --push origin "https://$USER:$TOKEN@github.com/$USER/$NAME.git"
+git push -u origin main
+git remote set-url --push origin "https://github.com/$USER/$NAME.git"
+git config branch.main.remote origin
+git config branch.main.merge refs/heads/main
 
 rm -f "$TMP"
 echo "✓ 已发布：https://github.com/$USER/$NAME"
