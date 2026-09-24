@@ -4,3 +4,6 @@ node_modules/
 _shot*.png
 .DS_Store
 Thumbs.db
+.gh_tmp
+_pub.log
+_r.json
