@@ -123,8 +123,9 @@ node _smoke.js
 ## 目录结构
 
 ```
-index.html   游戏本体（单文件，零依赖）
-_smoke.js    node 端冒烟测试与平衡性模拟
+index.html    游戏本体（单文件，零依赖）
+_smoke.js     node 端冒烟测试与平衡性模拟（194 项断言）
+publish.sh    一条命令把仓库发布到 GitHub（需要你的 token）
 ```
 
 ## License
