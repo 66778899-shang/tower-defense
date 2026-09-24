@@ -37,9 +37,16 @@ if [ "$EXIST" = "200" ]; then
   echo "→ 仓库 $USER/$NAME 已存在，直接推送"
 else
   echo "→ 创建公开仓库 $NAME"
-  curl -s "${AUTH[@]}" -X POST "$API/user/repos" \
-    -d "{\"name\":\"$NAME\",\"description\":\"零依赖单文件 HTML5 塔防游戏（Canvas + 原生 JS）\",\"private\":false,\"has_issues\":true,\"has_wiki\":false,\"auto_init\":false}" \
-    | grep -o '"full_name": *"[^"]*"' | head -1
+  RESP=$(curl -s "${AUTH[@]}" -X POST "$API/user/repos" \
+    -d "{\"name\":\"$NAME\",\"description\":\"零依赖单文件 HTML5 塔防游戏（Canvas + 原生 JS）\",\"private\":false,\"has_issues\":true,\"has_wiki\":false,\"auto_init\":false}")
+  if echo "$RESP" | grep -q '"message"'; then
+    echo "✗ 创建仓库失败：$(echo "$RESP" | grep -o '"message": *"[^"]*"' | head -1 | cut -d '"' -f4)"
+    echo "  通常是 token 权限不够（fine-grained token 常见）。两个办法："
+    echo "  1) 改用 classic token，勾选 repo 权限；"
+    echo "  2) 手动在 https://github.com/new 建好空仓库 $NAME，再重跑本脚本（脚本会自动检测已存在并直接推送）。"
+    exit 1
+  fi
+  echo "$RESP" | grep -o '"full_name": *"[^"]*"' | head -1
 fi
 
 git branch -M main
