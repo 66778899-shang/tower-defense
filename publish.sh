@@ -29,6 +29,15 @@ AUTH=(-H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json"
 
 TMP=".gh_tmp"
 
+# 无论成功、失败还是被 Ctrl-C 打断，都必须把 pushurl 上的 token 摘掉、删掉临时文件。
+# 否则 push 失败时脚本提前退出，token 就明文留在 .git/config 里了。
+cleanup() {
+  git remote set-url --push origin "https://github.com/${USER:-x}/${NAME:-x}.git" 2>/dev/null || true
+  git config branch.main.remote origin 2>/dev/null || true
+  rm -f "$TMP"
+}
+trap cleanup EXIT
+
 USER=$(curl -s "${AUTH[@]}" "$API/user" -o "$TMP" && grep -o '"login": *"[^"]*"' "$TMP" | head -1 | cut -d '"' -f4)
 if [ -z "$USER" ]; then
   echo "✗ 无法用这个 token 获取用户信息（token 无效或权限不足）"
@@ -72,7 +81,19 @@ git remote add origin "https://github.com/$USER/$NAME.git"
 # 写进 [branch "main"] 的 remote 字段，等于把 token 明文留在 .git/config 里。
 # 用完立刻恢复成干净的 URL。
 git remote set-url --push origin "https://$USER:$TOKEN@github.com/$USER/$NAME.git"
-git push -u origin main
+
+# git 可能被全局配置了代理（比如 clash 的 http://127.0.0.1:7897），代理软件没开时
+# push 会一直卡到超时。这里让 git 跟着环境变量走——本脚本前面所有 curl 都靠它走通了，
+# 说明它是可用的；没有环境变量就直连。
+GITPROXY="${https_proxy:-${HTTPS_PROXY:-}}"
+if [ -n "$GITPROXY" ]; then
+  echo "→ git 走代理 $GITPROXY（临时覆盖全局 http.proxy）"
+  GITOPT=(-c "http.proxy=$GITPROXY" -c "https.proxy=$GITPROXY")
+else
+  GITOPT=()
+fi
+
+git ${GITOPT[@]+"${GITOPT[@]}"} push -u origin main
 git remote set-url --push origin "https://github.com/$USER/$NAME.git"
 git config branch.main.remote origin
 git config branch.main.merge refs/heads/main
