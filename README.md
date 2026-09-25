@@ -1,6 +1,7 @@
 # 塔防指挥官 · Tower Defense Commander
 
 > 仓库地址：https://github.com/66778899-shang/tower-defense · 许可证：MIT
+> **在线试玩**：https://2eb5db02d67d4ef6ad0bab25beb58539.app.workbuddy.host（免下载，打开即玩）
 
 一个**零依赖的单文件 HTML5 塔防游戏**：一个 `index.html`（约 100KB，内联全部 CSS/JS + Canvas 渲染），双击即可运行，不需要构建、不需要 npm install、不需要联网。
 
